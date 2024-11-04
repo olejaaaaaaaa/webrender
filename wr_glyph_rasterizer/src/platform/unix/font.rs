@@ -349,14 +349,13 @@ fn transpose_bitmap(bitmap: &[u8], width: usize, height: usize) -> Vec<u8> {
     }
     transposed
 }
-
 fn flip_bitmap_x(bitmap: &mut [u8], width: usize, height: usize) {
     assert!(bitmap.len() == width * height * 4);
-    
+
     let mut aligned_pixels: Vec<u32> = vec![0; width * height];
 
     unsafe {
-        ptr::copy_non_overlapping(
+        ptr::copy_nonoverlapping(
             bitmap.as_ptr(),
             aligned_pixels.as_mut_ptr() as *mut u8,
             bitmap.len()
@@ -364,19 +363,27 @@ fn flip_bitmap_x(bitmap: &mut [u8], width: usize, height: usize) {
     }
 
     let pixels = aligned_pixels.as_mut_slice();
-    
+
     for row in pixels.chunks_mut(width) {
         row.reverse();
+    }
+
+    unsafe {
+        ptr::copy_nonoverlapping(
+            aligned_pixels.as_ptr() as *const u8,
+            bitmap.as_mut_ptr(),
+            bitmap.len()
+        );
     }
 }
 
 fn flip_bitmap_y(bitmap: &mut [u8], width: usize, height: usize) {
     assert!(bitmap.len() == width * height * 4);
-    
+
     let mut aligned_pixels: Vec<u32> = vec![0; width * height];
 
     unsafe {
-        ptr::copy_non_overlapping(
+        ptr::copy_nonoverlapping(
             bitmap.as_ptr(),
             aligned_pixels.as_mut_ptr() as *mut u8,
             bitmap.len()
@@ -384,7 +391,7 @@ fn flip_bitmap_y(bitmap: &mut [u8], width: usize, height: usize) {
     }
 
     let pixels = aligned_pixels.as_mut_slice();
-    
+
     for y in 0 .. height / 2 {
         let low_row = y * width;
         let high_row = (height - 1 - y) * width;
@@ -392,7 +399,16 @@ fn flip_bitmap_y(bitmap: &mut [u8], width: usize, height: usize) {
             pixels.swap(low_row + x, high_row + x);
         }
     }
+
+    unsafe {
+        ptr::copy_nonoverlapping(
+            aligned_pixels.as_ptr() as *const u8,
+            bitmap.as_mut_ptr(),
+            bitmap.len()
+        );
+    }
 }
+
 
 impl FontContext {
     pub fn distribute_across_threads() -> bool {
