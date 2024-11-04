@@ -109,7 +109,7 @@ impl Window {
         let mut txn = Transaction::new();
 
         let font_key = api.generate_font_key();
-        let font_bytes = load_file("../wrench/reftests/text/FreeSans.ttf");
+        let font_bytes = load_file("..webrender/wrench/reftests/text/FreeSans.ttf");
         txn.add_raw_font(font_key, font_bytes, 0);
 
         let font_instance_key = api.generate_font_instance_key();
